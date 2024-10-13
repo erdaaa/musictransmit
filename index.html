@@ -98,7 +98,7 @@
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-      import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+      import { getDatabase, ref, set, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
   
       // Firebase Config
       const firebaseConfig = {
@@ -145,7 +145,8 @@
               if (snapshot.exists()) {
                   currentMediaLink = snapshot.val().link;
                   console.log('Existing media link:', currentMediaLink);
-                  playMedia(currentMediaLink); // Play existing media link if found
+                  setupMediaPlayer(currentMediaLink); // Play existing media link if found
+                  document.getElementById('controls').style.display = 'flex'; // Show controls if media is found
               } else {
                   console.log('No media link found');
               }
@@ -216,72 +217,58 @@
               const request = { event: 'command', func: 'playVideo' };
               player.contentWindow.postMessage(JSON.stringify(request), '*');
           } else {
-              player.src = mediaLink; // Set the source for video
-              player.play(); // Play video
-          }
-
-          // Check if WebSocket is open before sending
-          if (socket.readyState === WebSocket.OPEN) {
-              socket.send(JSON.stringify({ action: 'play' }));
+              player.play();
           }
       }
 
+      function pauseMedia(mediaLink) {
+          const { videoId, isPlaylist } = getVideoId(mediaLink);
+          const isYouTube = !!videoId;
+
+          if (isYouTube) {
+              const request = { event: 'command', func: 'pauseVideo' };
+              player.contentWindow.postMessage(JSON.stringify(request), '*');
+          } else {
+              player.pause();
+          }
+      }
+
+      function removeMediaLink() {
+          remove(ref(database, 'mediaLink')).then(() => {
+              console.log('Media link removed from database');
+              currentMediaLink = '';
+              document.getElementById('player').innerHTML = ''; // Clear player display
+              document.getElementById('controls').style.display = 'none'; // Hide controls
+          }).catch((error) => {
+              console.error('Error removing media link:', error);
+          });
+      }
+
       document.getElementById('playBtn').addEventListener('click', () => {
-          if (player) {
-              playMedia(currentMediaLink); // Play current media link
+          if (currentMediaLink) {
+              playMedia(currentMediaLink);
+          } else {
+              alert('No media link found!');
           }
       });
 
       document.getElementById('pauseBtn').addEventListener('click', () => {
-          if (player) {
-              if (player.tagName === 'VIDEO') {
-                  player.pause();
-              } else {
-                  const request = { event: 'command', func: 'pauseVideo' };
-                  player.contentWindow.postMessage(JSON.stringify(request), '*');
-              }
-              
-              // Check if WebSocket is open before sending
-              if (socket.readyState === WebSocket.OPEN) {
-                  socket.send(JSON.stringify({ action: 'pause' }));
-              }
+          if (currentMediaLink) {
+              pauseMedia(currentMediaLink);
+          } else {
+              alert('No media link found!');
           }
       });
 
-      document.getElementById('removeBtn').addEventListener('click', () => {
-          if (player) {
-              // Stop the current media
-              if (player.tagName === 'VIDEO') {
-                  player.pause();
-              } else {
-                  const request = { event: 'command', func: 'pauseVideo' };
-                  player.contentWindow.postMessage(JSON.stringify(request), '*');
-              }
-              // Remove media link from Firebase
-              remove(ref(database, 'mediaLink'));
-
-              // Clear the player
-              document.getElementById('player').innerHTML = '';
-              currentMediaLink = ''; // Reset current media link
-          }
-      });
+      document.getElementById('removeBtn').addEventListener('click', removeMediaLink);
 
       function getVideoId(link) {
           const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-          const videoRegex = /(?:vimeo\.com\/|dailymotion\.com\/)(.+)/;
-          let videoId = '';
-          let isPlaylist = false;
-
-          if (youtubeRegex.test(link)) {
-              videoId = link.match(youtubeRegex)[1];
-              if (link.includes('list=')) {
-                  isPlaylist = true; // Check if it's a playlist
-              }
-          } else if (videoRegex.test(link)) {
-              videoId = link.match(videoRegex)[1];
+          const videoId = link.match(youtubeRegex);
+          if (videoId) {
+              return { videoId: videoId[1], isPlaylist: false }; // Assuming it's not a playlist for simplicity
           }
-
-          return { videoId, isPlaylist };
+          return { videoId: null, isPlaylist: false };
       }
     </script>
 </body>
