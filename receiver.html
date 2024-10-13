@@ -39,7 +39,7 @@
             max-height: 650px;
             border-radius: 10px;
             overflow: hidden;
-            background: #000;
+            background: rgba(0, 0, 0, 0.8);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
@@ -85,30 +85,37 @@
             }
         }
 
-        footer {
+        footer{
             position: absolute;
             bottom: 15px;
-        }
+          }
 
-        header {
+          header{
             width: 100%;
+          
             position: absolute;
             top: 0;
-        }
+
+          }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Audio/Video Receiver</h1>
+
+    <h1>Audio/Video Receiver</h1>
+
     </header>
 
     <div id="player"></div>
+  
+
 
     <footer>
         <button id="playBtn">Play</button>
         <button id="pauseBtn">Pause</button>
     </footer>
+
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -130,21 +137,12 @@
 
       let player;
 
-      // WebSocket connection
-      const socket = new WebSocket('ws://your-websocket-server-url'); // Replace with your WebSocket server URL
-
       // Listen for media link changes
       const mediaLinkRef = ref(database, 'mediaLink');
       onValue(mediaLinkRef, (snapshot) => {
           if (snapshot.exists()) {
               const mediaLink = snapshot.val().link;
-              if (mediaLink) {
-                  setupMediaPlayer(mediaLink);
-              } else {
-                  clearMediaPlayer(); // Clear the player if the media link is empty
-              }
-          } else {
-              clearMediaPlayer(); // Clear the player if the snapshot does not exist
+              setupMediaPlayer(mediaLink);
           }
       });
 
@@ -170,12 +168,6 @@
           }
       }
 
-      // Function to clear the media player
-      function clearMediaPlayer() {
-          document.getElementById('player').innerHTML = ''; // Clear the player content
-          player = null; // Reset the player variable
-      }
-
       // Listen for play and pause commands
       const mediaStateRef = ref(database, 'mediaState');
       onValue(mediaStateRef, (snapshot) => {
@@ -192,13 +184,11 @@
       // Play button click event
       document.getElementById('playBtn').addEventListener('click', () => {
           set(ref(database, 'mediaState'), { action: 'play' });
-          sendWebSocketMessage({ action: 'play' }); // Send play command via WebSocket
       });
 
       // Pause button click event
       document.getElementById('pauseBtn').addEventListener('click', () => {
           set(ref(database, 'mediaState'), { action: 'pause' });
-          sendWebSocketMessage({ action: 'pause' }); // Send pause command via WebSocket
       });
 
       function playMedia() {
@@ -226,24 +216,6 @@
               return { videoId: videoId[1], isPlaylist: false }; // Assuming it's not a playlist for simplicity
           }
           return { videoId: null, isPlaylist: false };
-      }
-
-      // WebSocket message handling
-      socket.addEventListener('message', function (event) {
-          const data = JSON.parse(event.data);
-          if (data.action === 'play') {
-              playMedia();
-          } else if (data.action === 'pause') {
-              pauseMedia();
-          } else if (data.mediaLink) {
-              setupMediaPlayer(data.mediaLink);
-          } else if (data.mediaLink === '') {
-              clearMediaPlayer(); // Clear the player if mediaLink is empty
-          }
-      });
-
-      function sendWebSocketMessage(message) {
-          socket.send(JSON.stringify(message));
       }
     </script>
 </body>
