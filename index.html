@@ -5,149 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio/Video Transmitter</title> 
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
-            animation: backgroundAnimation 10s ease infinite;
-            overflow: hidden;
-        }
-
-        @keyframes backgroundAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        h1 {
-            color: #fff;
-            margin-bottom: 20px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 2s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        input {
-            margin-bottom: 20px;
-            padding: 12px;
-            width: 100%;
-            max-width: 350px;
-            border: none;
-            border-radius: 5px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: box-shadow 0.3s, transform 0.3s;
-            background: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-        }
-
-        input:focus {
-            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-            transform: scale(1.02);
-            outline: none;
-        }
-
-        #player {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 640px;
-            height: 360px;
-            border: none;
-            border-radius: 10px;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.8);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s;
-        }
-
-        iframe, video {
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-        }
-
-        button {
-            margin: 5px;
-            padding: 12px 20px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background: linear-gradient(90deg, #007BFF, #0056b3);
-            color: #fff;
-            font-size: 16px;
-            transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        button:hover {
-            background: linear-gradient(90deg, #0056b3, #007BFF);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-        }
-
-        #controls {
-            display: flex; /* Set to flex for button layout */
-            margin-top: 10px;
-            opacity: 0;
-            animation: fadeIn 1s ease forwards;
-            animation-delay: 1s; /* Delay to appear after the h1 */
-        }
-
-        @media (max-width: 600px) {
-            #player {
-                height: 200px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-            button {
-                padding: 10px;
-                font-size: 14px;
-            }
-        }
-
-        footer{
-          position: absolute;
-          bottom: 10px;
+      body {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          margin: 15px;
+          font-family: 'Arial', sans-serif;
+          background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+          animation: backgroundAnimation 10s ease infinite;
+          overflow: hidden;
       }
-    </style>
+
+      @keyframes backgroundAnimation {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+      }
+
+      h1 {
+          color: #fff;
+          margin-bottom: 20px;
+          text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+          animation: fadeIn 2s ease forwards;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      input {
+          margin-bottom: 20px;
+          padding: 12px;
+          width: 100%;
+          max-width: 1000px;
+          border: none;
+          margin: 15px;
+          border-radius: 5px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+          transition: box-shadow 0.3s, transform 0.3s;
+          background: rgba(255, 255, 255, 0.9);
+          font-size: 16px;
+      }
+
+      input:focus {
+          box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+          transform: scale(1.02);
+          outline: none;
+      }
+
+      #player {
+          margin-top: 20px;
+          width: 100%;
+          max-width: 640px;
+          height: 360px;
+          border: none;
+          border-radius: 10px;
+          overflow: hidden;
+          background: rgba(0, 0, 0, 0.8);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          transition: all 0.3s;
+      }
+
+      iframe, video {
+          width: 100%;
+          height: 100%;
+          border-radius: 10px;
+      }
+
+      button {
+          margin: 5px;
+          padding: 12px 20px;
+          cursor: pointer;
+          border: none;
+          border-radius: 5px;
+          background: linear-gradient(90deg, #007BFF, #0056b3);
+          color: #fff;
+          font-size: 16px;
+          transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+          position: relative;
+          overflow: hidden;
+      }
+
+      button:hover {
+          background: linear-gradient(90deg, #0056b3, #007BFF);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+      }
+
+      button:active {
+          transform: translateY(0);
+          box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+      }
+
+      #controls {
+          display: flex; /* Set to flex for button layout */
+          margin-top: 10px;
+          opacity: 0;
+          animation: fadeIn 1s ease forwards;
+          animation-delay: 1s; /* Delay to appear after the h1 */
+      }
+
+      @media (max-width: 600px) {
+          #player {
+              height: 200px;
+          }
+          h1 {
+              font-size: 24px;
+          }
+          button {
+              padding: 10px;
+              font-size: 14px;
+          }
+      }
+
+
+      footer{
+        position: absolute;
+        bottom: 15px;
+      }
+  </style>
 </head>
 <body>
 
     <h1>Audio/Video Transmitter</h1>
     <input type="text" id="mediaLink" placeholder="Enter audio/video link">
-    <button id="sendLink">PLAY</button>
+    <button id="sendLink">Send Media Link</button>
     
     <div id="player"></div>
     
-    <!-- Control Buttons -->
-   
+  
 
 
     <footer>
-      <div id="controls" style="display: none;">
-        <button id="playBtn">Play</button>
-        <button id="pauseBtn">Pause</button>
-        <button id="removeBtn">Remove</button>
-    </div>
+  <!-- Control Buttons -->
+  <div id="controls" style="display: none;">
+    <button id="playBtn">Play</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="removeBtn">Remove</button>
+</div>
+
     </footer>
-
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, remove, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -241,55 +242,82 @@
             }
         }
 
-        function getVideoId(link) {
-            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            const videoIdMatch = link.match(youtubeRegex);
-            const isPlaylist = link.includes('list=');
-            return { videoId: videoIdMatch ? videoIdMatch[1] : null, isPlaylist };
-        }
+        function playMedia(mediaLink) {
+            const { videoId, isPlaylist } = getVideoId(mediaLink);
+            const isYouTube = !!videoId;
 
-        function playMedia(link) {
-            if (player && player.tagName === 'IFRAME') {
-                // Call YouTube API to play video
-                const playerID = player.id;
+            if (isYouTube) {
                 const request = { event: 'command', func: 'playVideo' };
-                window.postMessage({ ...request, playerID }, '*');
-            } else if (player && player.tagName === 'VIDEO') {
+                player.contentWindow.postMessage(JSON.stringify(request), '*');
+            } else {
                 player.play();
             }
+            // Update Firebase to reflect play action
+            set(ref(database, 'mediaState'), { action: 'play' });
         }
 
-        function pauseMedia(link) {
-            if (player && player.tagName === 'IFRAME') {
-                // Call YouTube API to pause video
-                const playerID = player.id;
+        function pauseMedia(mediaLink) {
+            const { videoId, isPlaylist } = getVideoId(mediaLink);
+            const isYouTube = !!videoId;
+
+            if (isYouTube) {
                 const request = { event: 'command', func: 'pauseVideo' };
-                window.postMessage({ ...request, playerID }, '*');
-            } else if (player && player.tagName === 'VIDEO') {
+                player.contentWindow.postMessage(JSON.stringify(request), '*');
+            } else {
                 player.pause();
             }
+            // Update Firebase to reflect pause action
+            set(ref(database, 'mediaState'), { action: 'pause' });
         }
 
-        document.getElementById('playBtn').addEventListener('click', () => {
-            set(ref(database, 'mediaState'), { action: 'play' });
-        });
-
-        document.getElementById('pauseBtn').addEventListener('click', () => {
-            set(ref(database, 'mediaState'), { action: 'pause' });
-        });
-
-        document.getElementById('removeBtn').addEventListener('click', () => {
+        function removeMediaLink() {
             remove(ref(database, 'mediaLink')).then(() => {
-                document.getElementById('player').innerHTML = '';
-                document.getElementById('controls').style.display = 'none';
-                alert('Media link removed!');
+                console.log('Media link removed from database');
+                currentMediaLink = '';
+                document.getElementById('player').innerHTML = ''; // Clear player display
+                document.getElementById('controls').style.display = 'none'; // Hide controls
             }).catch((error) => {
                 console.error('Error removing media link:', error);
             });
+        }
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (currentMediaLink) {
+                playMedia(currentMediaLink);
+            } else {
+                alert('No media link found!');
+            }
         });
 
-        // Fetch existing media link on load
-        fetchExistingMediaLink();
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (currentMediaLink) {
+                pauseMedia(currentMediaLink);
+            } else {
+                alert('No media link found!');
+            }
+        });
+
+        document.getElementById('removeBtn').addEventListener('click', () => {
+            removeMediaLink();
+        });
+
+        // Utility to extract YouTube video ID
+        function getVideoId(url) {
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const playlistRegex = /list=([a-zA-Z0-9_-]+)/;
+
+            const match = url.match(youtubeRegex);
+            if (match) {
+                const videoId = match[1];
+                const isPlaylist = playlistRegex.test(url);
+                return { videoId, isPlaylist };
+            }
+            return {};
+        }
+
+        // Fetch the existing media link when the page loads
+        window.onload = fetchExistingMediaLink;
+
     </script>
 </body>
 </html>
