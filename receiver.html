@@ -25,17 +25,18 @@
         }
 
         h1 {
-            margin-bottom: 20px;
-            font-size: 36px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+            color: #fffefe;
+            margin: 15px;
+            font-size: 26px;
+            text-shadow: 2px 2px 8px rgba(255, 106, 106, 0.6);
         }
 
         #player {
             margin-top: 20px;
             width: 100%;
-            max-width: 640px;
-            height: 360px;
-            border: 2px solid #fff;
+            max-width: 1040px;
+            height: 100%;
+            max-height: 650px;
             border-radius: 10px;
             overflow: hidden;
             background: #000;
@@ -84,24 +85,30 @@
             }
         }
 
-        footer{
+        footer {
             position: absolute;
             bottom: 15px;
-          }
+        }
+
+        header {
+            width: 100%;
+            position: absolute;
+            top: 0;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Audio/Video Receiver</h1>
-    <div id="player"></div>
-  
+    <header>
+        <h1>Audio/Video Receiver</h1>
+    </header>
 
+    <div id="player"></div>
 
     <footer>
         <button id="playBtn">Play</button>
         <button id="pauseBtn">Pause</button>
     </footer>
-
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -123,12 +130,21 @@
 
       let player;
 
+      // WebSocket connection
+      const socket = new WebSocket('ws://your-websocket-server-url'); // Replace with your WebSocket server URL
+
       // Listen for media link changes
       const mediaLinkRef = ref(database, 'mediaLink');
       onValue(mediaLinkRef, (snapshot) => {
           if (snapshot.exists()) {
               const mediaLink = snapshot.val().link;
-              setupMediaPlayer(mediaLink);
+              if (mediaLink) {
+                  setupMediaPlayer(mediaLink);
+              } else {
+                  clearMediaPlayer(); // Clear the player if the media link is empty
+              }
+          } else {
+              clearMediaPlayer(); // Clear the player if the snapshot does not exist
           }
       });
 
@@ -154,6 +170,12 @@
           }
       }
 
+      // Function to clear the media player
+      function clearMediaPlayer() {
+          document.getElementById('player').innerHTML = ''; // Clear the player content
+          player = null; // Reset the player variable
+      }
+
       // Listen for play and pause commands
       const mediaStateRef = ref(database, 'mediaState');
       onValue(mediaStateRef, (snapshot) => {
@@ -170,11 +192,13 @@
       // Play button click event
       document.getElementById('playBtn').addEventListener('click', () => {
           set(ref(database, 'mediaState'), { action: 'play' });
+          sendWebSocketMessage({ action: 'play' }); // Send play command via WebSocket
       });
 
       // Pause button click event
       document.getElementById('pauseBtn').addEventListener('click', () => {
           set(ref(database, 'mediaState'), { action: 'pause' });
+          sendWebSocketMessage({ action: 'pause' }); // Send pause command via WebSocket
       });
 
       function playMedia() {
@@ -202,6 +226,24 @@
               return { videoId: videoId[1], isPlaylist: false }; // Assuming it's not a playlist for simplicity
           }
           return { videoId: null, isPlaylist: false };
+      }
+
+      // WebSocket message handling
+      socket.addEventListener('message', function (event) {
+          const data = JSON.parse(event.data);
+          if (data.action === 'play') {
+              playMedia();
+          } else if (data.action === 'pause') {
+              pauseMedia();
+          } else if (data.mediaLink) {
+              setupMediaPlayer(data.mediaLink);
+          } else if (data.mediaLink === '') {
+              clearMediaPlayer(); // Clear the player if mediaLink is empty
+          }
+      });
+
+      function sendWebSocketMessage(message) {
+          socket.send(JSON.stringify(message));
       }
     </script>
 </body>

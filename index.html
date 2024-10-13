@@ -40,7 +40,7 @@
           margin-bottom: 20px;
           padding: 12px;
           width: 100%;
-          max-width: 1000px;
+          max-width: 350px;
           border: none;
           margin: 15px;
           border-radius: 5px;
@@ -59,8 +59,9 @@
       #player {
           margin-top: 20px;
           width: 100%;
-          max-width: 640px;
-          height: 360px;
+          max-width: 1040px;
+          height: 100%;
+          max-height: 650px;
           border: none;
           border-radius: 10px;
           overflow: hidden;
@@ -75,7 +76,7 @@
           border-radius: 10px;
       }
 
-      button {
+      .bt {
           margin: 5px;
           padding: 12px 20px;
           cursor: pointer;
@@ -90,13 +91,13 @@
           overflow: hidden;
       }
 
-      button:hover {
+      .bt:hover {
           background: linear-gradient(90deg, #0056b3, #007BFF);
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
       }
 
-      button:active {
+      .bt:active {
           transform: translateY(0);
           box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
       }
@@ -127,13 +128,48 @@
         position: absolute;
         bottom: 15px;
       }
+      header{
+        position: absolute;
+        top: 0;
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+
+      #sendLink{
+        padding: 13px 30px;
+        background-color: none;
+        border-radius: 5px;
+        border: none;
+     background: linear-gradient(90deg, #007BFF, #0056b3);
+     color: #fff;
+     font-size: 16px;
+     transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+     box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+      }
+
+      #sendLink:hover {
+        background: linear-gradient(90deg, #0056b3, #007BFF);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    #sendLink:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+    }
+
   </style>
 </head>
 <body>
 
-    <h1>Audio/Video Transmitter</h1>
+  <header>
+   
     <input type="text" id="mediaLink" placeholder="Enter audio/video link">
-    <button id="sendLink">Send Media Link</button>
+    <button id="sendLink">PLAY</button>
+  </header>
+
+  
     
     <div id="player"></div>
     
@@ -143,9 +179,9 @@
     <footer>
   <!-- Control Buttons -->
   <div id="controls" style="display: none;">
-    <button id="playBtn">Play</button>
-    <button id="pauseBtn">Pause</button>
-    <button id="removeBtn">Remove</button>
+    <button id="playBtn" class="bt">Play</button>
+    <button id="pauseBtn" class="bt">Pause</button>
+    <button id="removeBtn" class="bt">Remove</button>
 </div>
 
     </footer>
