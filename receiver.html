@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Receiver</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e0e0e0;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #player {
+            margin-top: 20px;
+            width: 90%;
+            max-width: 640px;
+            height: 360px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        video,
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        #controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 640px) {
+            #player {
+                height: 200px;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Media Receiver</h1>
+    <div id="player"></div>
+
+    <!-- Control Buttons -->
+    <div id="controls">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="removeBtn">Remove</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
+            authDomain: "quizzz-998c0.firebaseapp.com",
+            databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
+            projectId: "quizzz-998c0",
+            storageBucket: "quizzz-998c0.appspot.com",
+            messagingSenderId: "320059830331",
+            appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        let player;
+        const playerDiv = document.getElementById('player');
+
+        const socket = new WebSocket('ws://localhost:8080');
+
+        onValue(ref(database, 'mediaLink'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.link) {
+                const mediaLink = data.link;
+                loadMedia(mediaLink);
+            }
+        });
+
+        function loadMedia(link) {
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+            playerDiv.innerHTML = ''; // Clear previous media
+
+            if (youtubeRegex.test(link)) {
+                const videoId = getVideoId(link);
+                player = document.createElement('iframe');
+                player.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+                player.frameBorder = 0;
+                player.allowFullscreen = true;
+                playerDiv.appendChild(player);
+            } else {
+                player = document.createElement('video');
+                player.controls = true;
+                player.src = link;
+                playerDiv.appendChild(player);
+            }
+        }
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.action === 'play' && player) {
+                if (player.tagName === 'VIDEO') {
+                    player.play();
+                } else {
+                    const request = { event: 'command', func: 'playVideo' };
+                    player.contentWindow.postMessage(JSON.stringify(request), '*');
+                }
+            } else if (data.action === 'pause' && player) {
+                if (player.tagName === 'VIDEO') {
+                    player.pause();
+                } else {
+                    const request = { event: 'command', func: 'pauseVideo' };
+                    player.contentWindow.postMessage(JSON.stringify(request), '*');
+                }
+            } else if (data.action === 'remove') {
+                playerDiv.innerHTML = '';
+            }
+        };
+
+        function getVideoId(url) {
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(youtubeRegex);
+            return match ? match[1] : null;
+        }
+
+        // Control button functionality
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (player) {
+                if (player.tagName === 'VIDEO') {
+                    player.play();
+                } else {
+                    const request = { event: 'command', func: 'playVideo' };
+                    player.contentWindow.postMessage(JSON.stringify(request), '*');
+                }
+            }
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (player) {
+                if (player.tagName === 'VIDEO') {
+                    player.pause();
+                } else {
+                    const request = { event: 'command', func: 'pauseVideo' };
+                    player.contentWindow.postMessage(JSON.stringify(request), '*');
+                }
+            }
+        });
+
+        document.getElementById('removeBtn').addEventListener('click', () => {
+            playerDiv.innerHTML = '';
+            // Remove the media link from Firebase
+            set(ref(database, 'mediaLink'), { link: null });
+        });
+    </script>
+</body>
+
+</html>
