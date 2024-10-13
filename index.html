@@ -11,7 +11,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 10;
+            margin: 0;
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
         }
@@ -97,179 +97,174 @@
     </div>
 
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-      import { getDatabase, ref, set, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-  
-      // Firebase Config
-      const firebaseConfig = {
-          apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
-          authDomain: "quizzz-998c0.firebaseapp.com",
-          databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
-          projectId: "quizzz-998c0",
-          storageBucket: "quizzz-998c0.appspot.com",
-          messagingSenderId: "320059830331",
-          appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
-      };
-  
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
-  
-      let currentMediaLink = '';
-      let player;
-      let socket;
-  
-      // Connect to WebSocket server
-      function connectWebSocket() {
-          socket = new WebSocket('ws://localhost:8080');
-  
-          socket.addEventListener('open', () => {
-              console.log('WebSocket connection opened');
-          });
-  
-          socket.addEventListener('error', (error) => {
-              console.error('WebSocket Error: ', error);
-          });
-  
-          socket.addEventListener('close', () => {
-              console.log('WebSocket connection closed');
-          });
-      }
-  
-      connectWebSocket();
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, remove, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+      
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
+            authDomain: "quizzz-998c0.firebaseapp.com",
+            databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
+            projectId: "quizzz-998c0",
+            storageBucket: "quizzz-998c0.appspot.com",
+            messagingSenderId: "320059830331",
+            appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
+        };
+      
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+      
+        let currentMediaLink = '';
+        let player;
 
-      // Fetch existing media link from the database
-      async function fetchExistingMediaLink() {
-          try {
-              const mediaRef = ref(database, 'mediaLink');
-              const snapshot = await get(mediaRef);
-              if (snapshot.exists()) {
-                  currentMediaLink = snapshot.val().link;
-                  console.log('Existing media link:', currentMediaLink);
-                  setupMediaPlayer(currentMediaLink); // Play existing media link if found
-                  document.getElementById('controls').style.display = 'flex'; // Show controls if media is found
-              } else {
-                  console.log('No media link found');
-              }
-          } catch (error) {
-              console.error('Error fetching existing media link:', error);
-          }
-      }
+        // Function to retrieve the existing media link from Firebase
+        function fetchExistingMediaLink() {
+            const mediaLinkRef = ref(database, 'mediaLink/link');
+            get(mediaLinkRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    currentMediaLink = snapshot.val();
+                    setupMediaPlayer(currentMediaLink);
+                    document.getElementById('controls').style.display = 'flex';
+                } else {
+                    console.log('No media link found in database');
+                }
+            }).catch((error) => {
+                console.error('Error fetching media link:', error);
+            });
+        }
 
-      // Call the function to fetch the existing media link when the page loads
-      fetchExistingMediaLink();
+        // Listen for media state changes
+        const mediaStateRef = ref(database, 'mediaState');
+        onValue(mediaStateRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const state = snapshot.val();
+                if (state.action === 'play') {
+                    playMedia(currentMediaLink);
+                } else if (state.action === 'pause') {
+                    pauseMedia(currentMediaLink);
+                }
+            }
+        });
 
-      document.getElementById('sendLink').addEventListener('click', () => {
-          const mediaLink = document.getElementById('mediaLink').value;
-          const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-          const videoRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/|youtu\.be\/|vimeo\.com\/|dailymotion\.com\/|[^\/]+\/)(.+)/;
+        document.getElementById('sendLink').addEventListener('click', () => {
+            const mediaLink = document.getElementById('mediaLink').value;
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const videoRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/|youtu\.be\/|vimeo\.com\/|dailymotion\.com\/|[^\/]+\/)(.+)/;
 
-          if (mediaLink && (youtubeRegex.test(mediaLink) || videoRegex.test(mediaLink))) {
-              // Set the current media link
-              currentMediaLink = mediaLink;
-              // Send media link to Firebase
-              set(ref(database, 'mediaLink'), { link: mediaLink });
+            if (mediaLink && (youtubeRegex.test(mediaLink) || videoRegex.test(mediaLink))) {
+                // Set the current media link
+                currentMediaLink = mediaLink;
+                // Send media link to Firebase
+                set(ref(database, 'mediaLink'), { link: mediaLink });
 
-              // Check if WebSocket is open before sending
-              if (socket.readyState === WebSocket.OPEN) {
-                  socket.send(JSON.stringify({ action: 'load', link: mediaLink }));
-              } else {
-                  console.error('WebSocket is not open. Ready state:', socket.readyState);
-              }
+                // Set up media player
+                setupMediaPlayer(mediaLink);
+                
+                document.getElementById('controls').style.display = 'flex';
+                document.getElementById('mediaLink').value = ''; // Clear input field
+            } else {
+                alert('Please enter a valid link!');
+            }
+        });
 
-              // Set up media player
-              setupMediaPlayer(mediaLink);
-              
-              document.getElementById('controls').style.display = 'flex';
-              document.getElementById('mediaLink').value = ''; // Clear input field
-          } else {
-              alert('Please enter a valid link!');
-          }
-      });
+        function setupMediaPlayer(mediaLink) {
+            const { videoId, isPlaylist } = getVideoId(mediaLink);
+            const isYouTube = !!videoId;
 
-      function setupMediaPlayer(mediaLink) {
-          const { videoId, isPlaylist } = getVideoId(mediaLink);
-          const isYouTube = !!videoId;
+            if (isYouTube) {
+                player = document.createElement('iframe');
+                player.src = isPlaylist 
+                    ? `https://www.youtube.com/embed/videoseries?list=${videoId}` 
+                    : `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+                player.frameBorder = 0;
+                player.allowFullscreen = true;
+                document.getElementById('player').innerHTML = '';
+                document.getElementById('player').appendChild(player);
+            } else {
+                player = document.createElement('video');
+                player.controls = true;
+                player.src = mediaLink;
+                document.getElementById('player').innerHTML = '';
+                document.getElementById('player').appendChild(player);
+            }
+        }
 
-          if (isYouTube) {
-              // Adjust the player source based on whether it's a playlist or a single video
-              player = document.createElement('iframe');
-              player.src = isPlaylist 
-                  ? `https://www.youtube.com/embed/videoseries?list=${videoId}` 
-                  : `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-              player.frameBorder = 0;
-              player.allowFullscreen = true;
-              document.getElementById('player').innerHTML = '';
-              document.getElementById('player').appendChild(player);
-          } else {
-              player = document.createElement('video');
-              player.controls = true;
-              player.src = mediaLink;
-              document.getElementById('player').innerHTML = '';
-              document.getElementById('player').appendChild(player);
-          }
-      }
+        function playMedia(mediaLink) {
+            const { videoId, isPlaylist } = getVideoId(mediaLink);
+            const isYouTube = !!videoId;
 
-      function playMedia(mediaLink) {
-          const { videoId, isPlaylist } = getVideoId(mediaLink);
-          const isYouTube = !!videoId;
+            if (isYouTube) {
+                const request = { event: 'command', func: 'playVideo' };
+                player.contentWindow.postMessage(JSON.stringify(request), '*');
+            } else {
+                player.play();
+            }
+            // Update Firebase to reflect play action
+            set(ref(database, 'mediaState'), { action: 'play' });
+        }
 
-          if (isYouTube) {
-              const request = { event: 'command', func: 'playVideo' };
-              player.contentWindow.postMessage(JSON.stringify(request), '*');
-          } else {
-              player.play();
-          }
-      }
+        function pauseMedia(mediaLink) {
+            const { videoId, isPlaylist } = getVideoId(mediaLink);
+            const isYouTube = !!videoId;
 
-      function pauseMedia(mediaLink) {
-          const { videoId, isPlaylist } = getVideoId(mediaLink);
-          const isYouTube = !!videoId;
+            if (isYouTube) {
+                const request = { event: 'command', func: 'pauseVideo' };
+                player.contentWindow.postMessage(JSON.stringify(request), '*');
+            } else {
+                player.pause();
+            }
+            // Update Firebase to reflect pause action
+            set(ref(database, 'mediaState'), { action: 'pause' });
+        }
 
-          if (isYouTube) {
-              const request = { event: 'command', func: 'pauseVideo' };
-              player.contentWindow.postMessage(JSON.stringify(request), '*');
-          } else {
-              player.pause();
-          }
-      }
+        function removeMediaLink() {
+            remove(ref(database, 'mediaLink')).then(() => {
+                console.log('Media link removed from database');
+                currentMediaLink = '';
+                document.getElementById('player').innerHTML = ''; // Clear player display
+                document.getElementById('controls').style.display = 'none'; // Hide controls
+            }).catch((error) => {
+                console.error('Error removing media link:', error);
+            });
+        }
 
-      function removeMediaLink() {
-          remove(ref(database, 'mediaLink')).then(() => {
-              console.log('Media link removed from database');
-              currentMediaLink = '';
-              document.getElementById('player').innerHTML = ''; // Clear player display
-              document.getElementById('controls').style.display = 'none'; // Hide controls
-          }).catch((error) => {
-              console.error('Error removing media link:', error);
-          });
-      }
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (currentMediaLink) {
+                playMedia(currentMediaLink);
+            } else {
+                alert('No media link found!');
+            }
+        });
 
-      document.getElementById('playBtn').addEventListener('click', () => {
-          if (currentMediaLink) {
-              playMedia(currentMediaLink);
-          } else {
-              alert('No media link found!');
-          }
-      });
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (currentMediaLink) {
+                pauseMedia(currentMediaLink);
+            } else {
+                alert('No media link found!');
+            }
+        });
 
-      document.getElementById('pauseBtn').addEventListener('click', () => {
-          if (currentMediaLink) {
-              pauseMedia(currentMediaLink);
-          } else {
-              alert('No media link found!');
-          }
-      });
+        document.getElementById('removeBtn').addEventListener('click', () => {
+            removeMediaLink();
+        });
 
-      document.getElementById('removeBtn').addEventListener('click', removeMediaLink);
+        // Utility to extract YouTube video ID
+        function getVideoId(url) {
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const playlistRegex = /list=([a-zA-Z0-9_-]+)/;
 
-      function getVideoId(link) {
-          const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-          const videoId = link.match(youtubeRegex);
-          if (videoId) {
-              return { videoId: videoId[1], isPlaylist: false }; // Assuming it's not a playlist for simplicity
-          }
-          return { videoId: null, isPlaylist: false };
-      }
+            const match = url.match(youtubeRegex);
+            if (match) {
+                const videoId = match[1];
+                const isPlaylist = playlistRegex.test(url);
+                return { videoId, isPlaylist };
+            }
+            return {};
+        }
+
+        // Fetch the existing media link when the page loads
+        window.onload = fetchExistingMediaLink;
+
     </script>
 </body>
 </html>
