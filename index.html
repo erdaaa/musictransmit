@@ -258,13 +258,12 @@
         const html5Regex = /\.(mp4|webm|ogg|wav)$/i; // Add more formats as needed
         return youtubeRegex.test(link) || html5Regex.test(link);
     }
-
     function setupMediaPlayer(link) {
         playerDiv = document.getElementById('player');
         playerDiv.innerHTML = ''; // Clear previous player
         if (isYouTubeLink(link)) {
             player = document.createElement('iframe');
-            player.src = `https://www.youtube.com/embed/${getYouTubeId(link)}?enablejsapi=1&autoplay=1`; // Added autoplay and mute
+            player.src = `https://www.youtube.com/embed/${getYouTubeId(link)}?enablejsapi=1&autoplay=1`;
             player.width = 1000;
             player.height = 500;
             player.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
@@ -282,7 +281,7 @@
             playerDiv.appendChild(player);
         }
     
-        // Show controls once the player is set up
+        // Always show controls when setting up the media player
         document.getElementById('controls').style.display = 'flex';
     
         // Re-adding event listeners after player setup
@@ -291,33 +290,39 @@
     
 
     function addControlListeners() {
-        document.getElementById('playBtn').addEventListener('click', () => {
-            if (isYouTubeLink(currentMediaLink)) {
-                player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            } else {
-                player.play();
-            }
-        });
-
-        document.getElementById('pauseBtn').addEventListener('click', () => {
-            if (isYouTubeLink(currentMediaLink)) {
-                player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-            } else {
-                player.pause();
-            }
-        });
-
-        document.getElementById('removeBtn').addEventListener('click', () => {
-            if (currentMediaLink) {
-                set(ref(database, 'mediaLink'), null);
-                player.pause();
-                player.src = ''; // Clear the player
-                playerDiv.innerHTML = '';
-                document.getElementById('controls').style.display = 'none'; // Hide controls
-                currentMediaLink = ''; // Reset current link
-            }
-        });
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const removeBtn = document.getElementById('removeBtn');
+    
+        if (playBtn) {
+            playBtn.addEventListener('click', () => {
+                console.log("Play button clicked");
+                playMedia();
+            });
+        }
+    
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                console.log("Pause button clicked");
+                pauseMedia();
+            });
+        }
+    
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                console.log("Remove button clicked");
+                if (currentMediaLink) {
+                    set(ref(database, 'mediaLink'), null);
+                    player.pause();
+                    player.src = ''; // Clear the player
+                    playerDiv.innerHTML = '';
+                    document.getElementById('controls').style.display = 'none'; // Hide controls
+                    currentMediaLink = ''; // Reset current link
+                }
+            });
+        }
     }
+    
 
     function isYouTubeLink(link) {
         return /(?:youtube\.com|youtu\.be)/.test(link);
@@ -357,6 +362,8 @@
         set(ref(database, 'mediaState'), { action: 'pause' });
     }
 
+
+    
     // Fetch existing media link on load
     fetchExistingMediaLink();
 </script>
