@@ -4,356 +4,337 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio/Video Transmitter</title> 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=play_arrow" />
     <style>
-      body {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          margin: 15px;
-          font-family: 'Arial', sans-serif;
-          background: linear-gradient(135deg, #6a82fb, #fc5c7d);
-          animation: backgroundAnimation 10s ease infinite;
-          overflow: hidden;
-      }
+/* Reset and general styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+}
 
-      @keyframes backgroundAnimation {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-      }
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ff5500, #0091ff);
+    color: #fff;
+    padding: 20px;
+    transition: 1s ease-in-out;
+}
 
-      h1 {
-          color: #fff;
-          margin-bottom: 20px;
-          text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-          animation: fadeIn 2s ease forwards;
-      }
+/* Dynamic gradient effect */
+body:hover {
+    transition: 1s ease-in-out;
 
-      @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-      }
+    background: linear-gradient(135deg, #ff884c, #72c1ff);
+}
 
-      input {
-          margin-bottom: 20px;
-          padding: 12px;
-          width: 100%;
-          max-width: 350px;
-          border: none;
-          margin: 15px;
-          border-radius: 5px;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-          transition: box-shadow 0.3s, transform 0.3s;
-          background: rgba(255, 255, 255, 0.9);
-          font-size: 16px;
-      }
+/* Header styles */
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
-      input:focus {
-          box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-          transform: scale(1.02);
-          outline: none;
-      }
+#mediaLink {
+    width: 100%;
+    max-width: 400px;
+    padding: 15px;
+    border: none;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.2); /* Light translucent background */
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 10px;
+    transition: background 0.3s;
+}
 
-      #player {
-          margin-top: 20px;
-          width: 100%;
-          max-width: 800px;
-          height: 100%;
-          max-height: 350px;
-          border: none;
-          border-radius: 10px;
-          overflow: hidden;
-          background: rgba(0, 0, 0, 0.8);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-          transition: all 0.3s;
-      }
+#mediaLink:focus {
+    background: rgba(255, 255, 255, 0.4); /* Lighter on focus */
+}
 
-      iframe, video {
-          width: 100%;
-          height: 100%;
-          border-radius: 10px;
-      }
+/* Button styles */
+#sendLink {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    background: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
 
-      .bt {
-          margin: 5px;
-          padding: 12px 20px;
-          cursor: pointer;
-          border: none;
-          border-radius: 5px;
-          background: linear-gradient(90deg, #007BFF, #0056b3);
-          color: #fff;
-          font-size: 16px;
-          transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-          position: relative;
-          overflow: hidden;
-      }
+#sendLink:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
 
-      .bt:hover {
-          background: linear-gradient(90deg, #0056b3, #007BFF);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
-      }
+/* Player styles */
+#player {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    border: 2px solid #4d4d4d;
+    border-radius: 15px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1); /* Light translucent background */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
 
-      .bt:active {
-          transform: translateY(0);
-          box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-      }
+/* Footer styles */
+footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-      #controls {
-          display: flex; /* Set to flex for button layout */
-          margin-top: 10px;
-          opacity: 0;
-          animation: fadeIn 1s ease forwards;
-          animation-delay: 1s; /* Delay to appear after the h1 */
-      }
+/* Control button styles */
+#controls {
+    display: flex; /* Horizontal alignment */
+    flex-direction: row; 
+    gap: 15px;
+    margin-top: 15px;
+}
 
-      @media (max-width: 600px) {
-          #player {
-              height: 200px;
-          }
-          h1 {
-              font-size: 24px;
-          }
-          button {
-              padding: 10px;
-              font-size: 14px;
-          }
-      }
+.bt {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    background: #6c757d;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
 
+.bt:hover {
+    background: #5a6268;
+    transform: scale(1.05);
+}
 
-      footer{
-        position: absolute;
-        bottom: 15px;
-      }
-      header{
-        position: absolute;
-        top: 0;
-        display: flex;
+/* Responsive styles */
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
         align-items: center;
-        width: 100%;
-      }
-
-      #sendLink{
-        padding: 13px 30px;
-        background-color: none;
-        border-radius: 5px;
-        border: none;
-     background: linear-gradient(90deg, #007BFF, #0056b3);
-     color: #fff;
-     font-size: 16px;
-     transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
-     box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-      }
-
-      #sendLink:hover {
-        background: linear-gradient(90deg, #0056b3, #007BFF);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
     }
 
-    #sendLink:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+    #mediaLink {
+        flex: 1;
+        margin-bottom: 10px;
     }
 
-  </style>
+    #sendLink {
+        flex-shrink: 0;
+    }
+
+    footer {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    #controls {
+        flex-direction: row; /* Ensure horizontal layout on smaller devices */
+        gap: 15px;
+    }
+
+    .bt {
+        width: auto; /* Ensure buttons fit their content */
+    }
+}
+
+/* Styles for smart watches */
+@media (max-width: 300px) {
+    body {
+        padding: 10px;
+    }
+
+    #mediaLink {
+        font-size: 14px;
+    }
+
+    #sendLink, .bt {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    #player {
+        height: 150px;
+    }
+}
+
+    </style>
 </head>
 <body>
 
-  <header>
-   
+<header>
     <input type="text" id="mediaLink" placeholder="Enter audio/video link">
     <button id="sendLink">PLAY</button>
-  </header>
+</header>
 
-  
-    
-    <div id="player"></div>
-    
-  
+<div id="player"></div>
 
+<footer>
+    <div id="controls" style="display: none;">
+        <button id="playBtn" class="bt">▶︎</button>
+        <button id="pauseBtn" class="bt">||</button>
+        <button id="removeBtn" class="bt">🗑️</button>
+    </div>
+</footer>
 
-    <footer>
-  <!-- Control Buttons -->
-  <div id="controls" style="display: none;">
-    <button id="playBtn" class="bt">Play</button>
-    <button id="pauseBtn" class="bt">Pause</button>
-    <button id="removeBtn" class="bt">Remove</button>
-</div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, set, remove, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    </footer>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-      
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
-            authDomain: "quizzz-998c0.firebaseapp.com",
-            databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
-            projectId: "quizzz-998c0",
-            storageBucket: "quizzz-998c0.appspot.com",
-            messagingSenderId: "320059830331",
-            appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
-        };
-      
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-      
-        let currentMediaLink = '';
-        let player;
+    const firebaseConfig = {
+        apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
+        authDomain: "quizzz-998c0.firebaseapp.com",
+        databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
+        projectId: "quizzz-998c0",
+        storageBucket: "quizzz-998c0.appspot.com",
+        messagingSenderId: "320059830331",
+        appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
+    };
 
-        // Function to retrieve the existing media link from Firebase
-        function fetchExistingMediaLink() {
-            const mediaLinkRef = ref(database, 'mediaLink/link');
-            get(mediaLinkRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    currentMediaLink = snapshot.val();
-                    setupMediaPlayer(currentMediaLink);
-                    document.getElementById('controls').style.display = 'flex';
-                } else {
-                    console.log('No media link found in database');
-                }
-            }).catch((error) => {
-                console.error('Error fetching media link:', error);
-            });
-        }
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-        // Listen for media state changes
-        const mediaStateRef = ref(database, 'mediaState');
-        onValue(mediaStateRef, (snapshot) => {
+    let currentMediaLink = '';
+    let player;
+    let playerDiv;
+
+    function fetchExistingMediaLink() {
+        const mediaLinkRef = ref(database, 'mediaLink/link');
+        get(mediaLinkRef).then((snapshot) => {
             if (snapshot.exists()) {
-                const state = snapshot.val();
-                if (state.action === 'play') {
-                    playMedia(currentMediaLink);
-                } else if (state.action === 'pause') {
-                    pauseMedia(currentMediaLink);
-                }
-            }
-        });
-
-        document.getElementById('sendLink').addEventListener('click', () => {
-            const mediaLink = document.getElementById('mediaLink').value;
-            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            const videoRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/|youtu\.be\/|vimeo\.com\/|dailymotion\.com\/|[^\/]+\/)(.+)/;
-
-            if (mediaLink && (youtubeRegex.test(mediaLink) || videoRegex.test(mediaLink))) {
-                // Set the current media link
-                currentMediaLink = mediaLink;
-                // Send media link to Firebase
-                set(ref(database, 'mediaLink'), { link: mediaLink });
-
-                // Set up media player
-                setupMediaPlayer(mediaLink);
-                
+                currentMediaLink = snapshot.val();
+                setupMediaPlayer(currentMediaLink);
                 document.getElementById('controls').style.display = 'flex';
-                document.getElementById('mediaLink').value = ''; // Clear input field
+                playMedia();  // Ensure autoplay for existing link
             } else {
-                alert('Please enter a valid link!');
+                console.log('No media link found in database');
             }
+        }).catch((error) => {
+            console.error('Error fetching media link:', error);
         });
+    }
 
-        function setupMediaPlayer(mediaLink) {
-            const { videoId, isPlaylist } = getVideoId(mediaLink);
-            const isYouTube = !!videoId;
-
-            if (isYouTube) {
-                player = document.createElement('iframe');
-                player.src = isPlaylist 
-                    ? `https://www.youtube.com/embed/videoseries?list=${videoId}` 
-                    : `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-                player.frameBorder = 0;
-                player.allowFullscreen = true;
-                document.getElementById('player').innerHTML = '';
-                document.getElementById('player').appendChild(player);
-            } else {
-                player = document.createElement('video');
-                player.controls = true;
-                player.src = mediaLink;
-                document.getElementById('player').innerHTML = '';
-                document.getElementById('player').appendChild(player);
+    const mediaStateRef = ref(database, 'mediaState');
+    onValue(mediaStateRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const state = snapshot.val();
+            if (state.action === 'play') {
+                playMedia();
+            } else if (state.action === 'pause') {
+                pauseMedia();
             }
         }
+    });
 
-        function playMedia(mediaLink) {
-            const { videoId, isPlaylist } = getVideoId(mediaLink);
-            const isYouTube = !!videoId;
-
-            if (isYouTube) {
-                const request = { event: 'command', func: 'playVideo' };
-                player.contentWindow.postMessage(JSON.stringify(request), '*');
-            } else {
-                player.play();
-            }
-            // Update Firebase to reflect play action
-            set(ref(database, 'mediaState'), { action: 'play' });
+    document.getElementById('sendLink').addEventListener('click', () => {
+        const mediaLink = document.getElementById('mediaLink').value;
+        if (isValidLink(mediaLink)) {
+            currentMediaLink = mediaLink;
+            set(ref(database, 'mediaLink'), { link: mediaLink });
+            setupMediaPlayer(mediaLink);
+            document.getElementById('controls').style.display = 'flex';
+            playMedia(); // Autoplay after setting up
+        } else {
+            alert('Please enter a valid media link');
         }
+    });
 
-        function pauseMedia(mediaLink) {
-            const { videoId, isPlaylist } = getVideoId(mediaLink);
-            const isYouTube = !!videoId;
+    function isValidLink(link) {
+        const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        return youtubeRegex.test(link);
+    }
 
-            if (isYouTube) {
-                const request = { event: 'command', func: 'pauseVideo' };
-                player.contentWindow.postMessage(JSON.stringify(request), '*');
-            } else {
-                player.pause();
+    function setupMediaPlayer(mediaLink) {
+        playerDiv = document.getElementById('player');
+        playerDiv.innerHTML = '';
+
+        if (mediaLink.includes('youtube') || mediaLink.includes('youtu.be')) {
+            let videoId = extractYouTubeID(mediaLink);
+            if (videoId) {
+                playerDiv.innerHTML = `<iframe id="ytplayer" width="100%" height="350px" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1" frameborder="0" allowfullscreen></iframe>`;
+                initYouTubeAPI();
             }
-            // Update Firebase to reflect pause action
-            set(ref(database, 'mediaState'), { action: 'pause' });
+        } else if (mediaLink.includes('.mp4') || mediaLink.includes('.webm')) {
+            player = document.createElement('video');
+            player.src = mediaLink;
+            player.controls = true;
+            player.autoplay = true;  // Ensure autoplay for local videos
+            playerDiv.appendChild(player);
         }
+    }
 
-        function removeMediaLink() {
-            remove(ref(database, 'mediaLink')).then(() => {
-                console.log('Media link removed from database');
-                currentMediaLink = '';
-                document.getElementById('player').innerHTML = ''; // Clear player display
-                document.getElementById('controls').style.display = 'none'; // Hide controls
-            }).catch((error) => {
-                console.error('Error removing media link:', error);
+    function extractYouTubeID(url) {
+        const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(youtubeRegex);
+        return match && match[1] ? match[1] : null;
+    }
+
+    function initYouTubeAPI() {
+        window.onYouTubeIframeAPIReady = function () {
+            player = new YT.Player('ytplayer', {
+                events: {
+                    'onReady': onPlayerReady
+                }
             });
-        }
+        };
 
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+    }
+
+    function onPlayerReady(event) {
+        // Start autoplay muted
+        player.mute();
+        player.playVideo();
+    
+        // Unmute after a short delay
+        setTimeout(() => {
+            player.unMute();
+        }, 300); // Adjust time as needed
+    
         document.getElementById('playBtn').addEventListener('click', () => {
-            if (currentMediaLink) {
-                playMedia(currentMediaLink);
-            } else {
-                alert('No media link found!');
-            }
+            set(ref(database, 'mediaState'), { action: 'play' });
+            player.playVideo();
         });
-
+    
         document.getElementById('pauseBtn').addEventListener('click', () => {
-            if (currentMediaLink) {
-                pauseMedia(currentMediaLink);
-            } else {
-                alert('No media link found!');
-            }
+            set(ref(database, 'mediaState'), { action: 'pause' });
+            player.pauseVideo();
         });
-
+    
         document.getElementById('removeBtn').addEventListener('click', () => {
-            removeMediaLink();
+            set(ref(database, 'mediaLink'), { link: null });
+            playerDiv.innerHTML = '';
+            document.getElementById('controls').style.display = 'none';
+            remove(ref(database, 'mediaState'));
         });
+    }
+    
 
-        // Utility to extract YouTube video ID
-        function getVideoId(url) {
-            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            const playlistRegex = /list=([a-zA-Z0-9_-]+)/;
-
-            const match = url.match(youtubeRegex);
-            if (match) {
-                const videoId = match[1];
-                const isPlaylist = playlistRegex.test(url);
-                return { videoId, isPlaylist };
-            }
-            return {};
+    function pauseMedia() {
+        if (player && typeof player.pauseVideo === 'function') {
+            player.pauseVideo(); // Pause YouTube video
+        } else if (player && typeof player.pause === 'function') {
+            player.pause(); // Pause video element (e.g., MP4/WebM)
         }
+    }
 
-        // Fetch the existing media link when the page loads
-        window.onload = fetchExistingMediaLink;
+    window.onload = fetchExistingMediaLink;
+</script>
 
-    </script>
 </body>
 </html>
