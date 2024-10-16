@@ -296,27 +296,21 @@
         return match ? match[1] : null;
     }
     
-    function playYouTubeVideo(link) {
-        if (player) {
-            // If the player is already set up, load and play the video by URL
-            player.contentWindow.postMessage('{"event":"command","func":"loadVideoByUrl","args":["' + link + '"]}', '*');
-            player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        } else {
-            // If the player is not set up yet, set it up first
-            setupMediaPlayer(link);
-        }
-    
-        // Update the Firebase with the current media link and state
-        update(currentMediaRef, { link: link, state: 'playing' });
-    }
-    
-    // Event listener for the play button
-    document.getElementById('playBtn').addEventListener('click', () => {
+    // Play media
+    document.getElementById('playBtn').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default behavior to avoid page refresh
         if (currentMediaLink) {
-            playYouTubeVideo(currentMediaLink);
+            playMedia();
+            update(ref(database, 'currentMedia'), { state: 'playing' });
         }
     });
     
+    function playMedia() {
+        if (player) {
+            player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            console.log("Playing video:", currentMediaLink);
+        }
+    }
     
     // Pause media
     document.getElementById('pauseBtn').addEventListener('click', (event) => {
