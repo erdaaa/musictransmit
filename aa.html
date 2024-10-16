@@ -5,60 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio/Video Transmitter with YouTube Search and Controls</title>
     <style>
-        /* Your existing CSS styles */
-        #searchResults {
-            margin-top: 20px;
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #282c34, #3e444d);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
         }
-        .search-item {
+        
+        #playerContainer {
+            background: #1f2026;
+            border-radius: 10px;
+            padding: 15px; /* Reduced padding */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 350px; /* Reduced max width for compactness */
+            text-align: center;
+        }
+        
+        #albumArt {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 10px; /* Reduced margin */
+        }
+        
+        h2 {
+            margin: 5px 0; /* Reduced margins */
+            font-size: 20px; /* Default size for smaller devices */
+        }
+        
+        h4 {
+            margin: 3px 0; /* Reduced margins */
+            font-size: 16px; /* Default size for smaller devices */
+            color: #ccc;
+        }
+        
+        .buttonContainer {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
+            margin-top: 10px; /* Reduced margin */
         }
-        .search-item img {
-            max-width: 120px;
-            border-radius: 8px;
-        }
-        .play-btn {
-            padding: 10px 15px;
+        
+        button {
             background-color: #007bff;
-            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
+            color: white;
+            padding: 8px 0; /* Reduced padding */
             cursor: pointer;
+            font-size: 14px; /* Smaller font size */
+            transition: background-color 0.3s ease;
+            flex: 1;
+            margin: 0 2px; /* Less space between buttons */
         }
-        .play-btn:hover {
+        
+        button:hover {
             background-color: #0056b3;
         }
-        footer {
-            margin-top: 20px;
+        
+        #searchSection {
+            margin-bottom: 15px; /* Reduced bottom margin */
+            display: flex;
+            width: 100%;
+            max-width: 350px; /* Same max width as player container */
         }
-        .bt {
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 8px; /* Reduced padding */
             border: none;
-            border-radius: 8px;
+            border-radius: 5px 0 0 5px;
+            font-size: 14px; /* Smaller font size */
+        }
+        
+        button#searchBtn {
+            border-radius: 0 5px 5px 0;
+        }
+        
+        #searchResults {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px; /* Reduced margin */
+            width: 100%;
+            max-width: 350px; /* Same max width as player container */
+        }
+        
+        #searchResults div {
+            background: #2c2f33;
+            border-radius: 5px;
+            padding: 8px; /* Reduced padding */
+            margin: 5px 0;
+            text-align: center;
+            width: 100%;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
-        .bt.remove {
-            background-color: #dc3545;
+        
+        #searchResults div:hover {
+            background: #3e444d;
         }
-        .bt.pause {
-            background-color: #ffc107;
+        
+        /* Responsive Styles */
+        @media (max-width: 500px) {
+            #playerContainer {
+                padding: 10px; /* Reduced padding */
+            }
+            h2 {
+                font-size: 18px; /* Adjusted size */
+            }
+            h4 {
+                font-size: 14px; /* Adjusted size */
+            }
+            button {
+                font-size: 12px; /* Adjusted size */
+            }
         }
-        .bt.sync {
-            background-color: #17a2b8;
+        
+        @media (max-width: 400px) {
+            h2 {
+                font-size: 16px; /* Adjusted size */
+            }
+            h4 {
+                font-size: 12px; /* Adjusted size */
+            }
+            button {
+                font-size: 10px; /* Adjusted size */
+            }
         }
-        .bt:hover {
-            opacity: 0.8;
+        
+        @media (max-width: 300px) {
+            h2 {
+                font-size: 14px; /* Adjusted size */
+            }
+            h4 {
+                font-size: 10px; /* Adjusted size */
+            }
+            button {
+                font-size: 8px; /* Adjusted size */
+            }
         }
+        
     </style>
 </head>
 <body>
@@ -70,19 +164,17 @@
         <button id="playBtn" class="bt">▶︎ Play</button>
         <button id="pauseBtn" class="bt pause">|| Pause</button>
         <button id="removeBtn" class="bt remove">🗑️ Remove</button>
-        <button id="syncBtn" class="bt sync">Sync to 30s</button>
     </div>
 </header>
 
 <div id="player"></div>
-
 <div id="searchResults"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-
+    
     // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
@@ -93,17 +185,17 @@
         messagingSenderId: "320059830331",
         appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
     };
-
+    
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth();
-
+    
     let currentMediaLink = '';
-    let currentUserId = null;
     let player;
-    let playerDiv;
-
-    // Authenticate the user (Anonymous for now)
+    const playerDiv = document.getElementById('player');
+    const currentMediaRef = ref(database, 'currentMedia');
+    
+    // Authenticate the user
     signInAnonymously(auth)
         .then(() => {
             console.log("Signed in anonymously.");
@@ -111,23 +203,11 @@
         .catch((error) => {
             console.error("Error signing in anonymously:", error);
         });
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUserId = user.uid;
-            console.log("User signed in:", currentUserId);
-        }
-    });
-
-    const currentMediaRef = ref(database, 'currentMedia');
-
+    
     // Function to play the video and update Firebase with the video link
     function playYouTubeVideo(link) {
         currentMediaLink = link;
-        
-        // Setup media player for the selected YouTube video
-        setupMediaPlayer(currentMediaLink);
-
+    
         // Store the video link in Firebase under the 'currentMedia' node
         update(ref(database, 'currentMedia'), {
             link: currentMediaLink,
@@ -135,22 +215,25 @@
         })
         .then(() => {
             console.log("Video link and state successfully stored in Firebase.");
+            setupMediaPlayer(currentMediaLink); // Set up the player
+            playMedia(); // Immediately play the video
         })
         .catch((error) => {
             console.error("Error storing video link in Firebase:", error);
         });
     }
-
+    
     // YouTube Search functionality
-    document.getElementById('searchYouTube').addEventListener('click', () => {
+    document.getElementById('searchYouTube').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default behavior to avoid page refresh
         const query = document.getElementById('mediaLink').value;
         searchYouTube(query);
     });
-
+    
     function searchYouTube(query) {
-        const apiKey = 'AIzaSyDOaiGm4sJQu6VO18xAZRB9wBgwSgOJ3hk'; // Replace with your actual YouTube API key
+        const apiKey = 'AIzaSyDOaiGm4sJQu6VO18xAZRB9wBgwSgOJ3hk'; // Your YouTube API key
         const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
-
+    
         fetch(searchUrl)
             .then(response => response.json())
             .then(data => {
@@ -158,19 +241,19 @@
             })
             .catch(error => console.error('Error fetching YouTube search results:', error));
     }
-
+    
     function displaySearchResults(videos) {
         const searchResultsDiv = document.getElementById('searchResults');
         searchResultsDiv.innerHTML = ''; // Clear previous results
-
+    
         videos.forEach(video => {
             const videoId = video.id.videoId;
             const videoTitle = video.snippet.title;
             const videoThumbnail = video.snippet.thumbnails.default.url;
-
+    
             const searchItemDiv = document.createElement('div');
             searchItemDiv.classList.add('search-item');
-
+    
             searchItemDiv.innerHTML = `
                 <div>
                     <img src="${videoThumbnail}" alt="${videoTitle}">
@@ -178,135 +261,120 @@
                 <div>${videoTitle}</div>
                 <button class="play-btn" data-video-id="${videoId}">Play</button>
             `;
-
+    
             searchResultsDiv.appendChild(searchItemDiv);
-
+    
             // Play button functionality
             searchItemDiv.querySelector('.play-btn').addEventListener('click', (e) => {
                 const selectedVideoId = e.target.getAttribute('data-video-id');
                 const youtubeLink = `https://www.youtube.com/watch?v=${selectedVideoId}`;
-
                 playYouTubeVideo(youtubeLink);
             });
         });
     }
-
+    
     // Function to set up the media player
     function setupMediaPlayer(link) {
-        playerDiv = document.getElementById('player');
-        playerDiv.innerHTML = ''; // Clear previous player
-        if (isYouTubeLink(link)) {
-            const videoId = getYouTubeId(link);
+        if (!player) { // Create player only if it doesn't exist
+            playerDiv.innerHTML = ''; // Clear previous player
             player = document.createElement('iframe');
-            player.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1`;
-            player.width = 1000;
-            player.height = 500;
+            player.src = `https://www.youtube.com/embed/${getYouTubeId(link)}?enablejsapi=1`;
+            player.width = 500;
+            player.height = 300;
             player.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
             player.allowFullscreen = true;
             playerDiv.appendChild(player);
-
-            // Ensure playback starts from the specified time, if provided
-            onYouTubeIframeAPIReady(videoId);
-        }
-    }
-
-    // Function to initialize the YouTube player API
-    function onYouTubeIframeAPIReady(videoId) {
-        const playerInstance = new YT.Player(player, {
-            height: '500',
-            width: '1000',
-            videoId: videoId,
-            playerVars: { 'autoplay': 1, 'start': getStartTime(currentMediaLink) },
-            events: {
-                'onReady': (event) => {
-                    event.target.playVideo();
-                },
-                'onStateChange': (event) => {
-                    if (event.data === YT.PlayerState.PAUSED) {
-                        update(currentMediaRef, { state: 'paused' });
-                    }
-                }
-            }
-        });
-    }
-
-    function getStartTime(link) {
-        const match = link.match(/t=(\d+)/);
-        return match ? parseInt(match[1]) : 0;
-    }
-
-    function isYouTubeLink(link) {
-        return /(?:youtube\.com|youtu\.be)/.test(link);
-    }
-
-    function getYouTubeId(link) {
-        const url = new URL(link);
-        return url.searchParams.get("v");
-    }
-
-    // Pause the current video and update Firebase
-    document.getElementById('pauseBtn').addEventListener('click', () => {
-        update(currentMediaRef, { state: 'paused' })
-            .then(() => {
-                if (player) {
-                    player.pauseVideo();
-                    console.log("Video paused and state updated in Firebase.");
-                }
-            })
-            .catch((error) => {
-                console.error("Error updating video state to paused in Firebase:", error);
-            });
-    });
-
-    // Remove the current video from Firebase
-    document.getElementById('removeBtn').addEventListener('click', () => {
-        remove(currentMediaRef)
-            .then(() => {
-                console.log("Media removed from Firebase.");
-                playerDiv.innerHTML = ''; // Clear player
-            })
-            .catch((error) => {
-                console.error("Error removing media from Firebase:", error);
-            });
-    });
-
-    // Sync to time
-    document.getElementById('syncBtn').addEventListener('click', () => {
-        if (currentMediaLink) {
-            // Replace the current link with a new link with t=30 seconds
-            const newLink = currentMediaLink.split('?')[0] + '?t=30';
-            currentMediaLink = newLink;
-            console.log("Synchronized to 30 seconds:", currentMediaLink);
-            // Update Firebase with the new link
-            update(currentMediaRef, { link: currentMediaLink });
-            if (player) {
-                // Pause the video and reload with new link
-                player.pauseVideo();
-                setupMediaPlayer(currentMediaLink); // Reload with updated link
-            }
         } else {
-            console.error("No media link to sync.");
+            // If player exists, just update the video source
+            player.src = `https://www.youtube.com/embed/${getYouTubeId(link)}?enablejsapi=1`;
+        }
+    }
+    
+    // Utility function to extract YouTube ID
+    function getYouTubeId(link) {
+        const match = link.match(/(?:youtube\.com\/(?:[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return match ? match[1] : null;
+    }
+    
+    function playYouTubeVideo(link) {
+        if (player) {
+            // If the player is already set up, load and play the video by URL
+            player.contentWindow.postMessage('{"event":"command","func":"loadVideoByUrl","args":["' + link + '"]}', '*');
+            player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        } else {
+            // If the player is not set up yet, set it up first
+            setupMediaPlayer(link);
+        }
+    
+        // Update the Firebase with the current media link and state
+        update(currentMediaRef, { link: link, state: 'playing' });
+    }
+    
+    // Event listener for the play button
+    document.getElementById('playBtn').addEventListener('click', () => {
+        if (currentMediaLink) {
+            playYouTubeVideo(currentMediaLink);
         }
     });
-
-    // Firebase listener for currentMedia state
-    onValue(currentMediaRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            currentMediaLink = data.link;
-            if (data.state === 'paused') {
-                console.log("Video is paused in Firebase");
-                if (player) {
-                    player.pauseVideo(); // Pause the player
-                }
-            } else if (data.state === 'playing') {
-                console.log("Video is playing in Firebase");
-                setupMediaPlayer(currentMediaLink); // Setup and play video
+    
+    
+    // Pause media
+    document.getElementById('pauseBtn').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default behavior to avoid page refresh
+        if (currentMediaLink) {
+            if (player) {
+                player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                update(ref(database, 'currentMedia'), { state: 'paused' });
+                console.log("Paused video:", currentMediaLink);
             }
         }
     });
+    
+    // Remove video
+    document.getElementById('removeBtn').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default behavior to avoid page refresh
+        if (currentMediaLink) {
+            currentMediaLink = ''; // Clear current link
+            if (player) {
+                player.src = ''; // Clear the video player
+            }
+            update(ref(database, 'currentMedia'), { link: '', state: 'paused' });
+            console.log("Removed video from player.");
+        }
+    });
+    
+    // Listen for changes in currentMedia in Firebase
+    onValue(currentMediaRef, (snapshot) => {
+        const mediaData = snapshot.val();
+        if (mediaData) {
+            currentMediaLink = mediaData.link;
+    
+            // Update the video player only if it’s not the current playing state
+            if (mediaData.state === 'playing') {
+                setupMediaPlayer(currentMediaLink);
+                playMedia();
+            } else if (mediaData.state === 'paused') {
+                if (player) {
+                    player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    console.log("Paused video from Firebase:", currentMediaLink);
+                }
+            } else if (mediaData.link === '') {
+                if (player) {
+                    player.src = ''; // Clear the video player if no link
+                }
+                console.log("Video removed from player.");
+            }
+        }
+    });
+    
+    // Clear the player on page unload
+    window.addEventListener('beforeunload', () => {
+        if (player) {
+            player.src = ''; // Clear the video player to prevent it from holding the state
+        }
+    });
+    
 </script>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
