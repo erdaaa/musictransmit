@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio/Video Transmitter with YouTube Search and Controls</title>
+    <style>
+        /* Your existing CSS styles */
+        #searchResults {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .search-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .search-item img {
+            max-width: 120px;
+            border-radius: 8px;
+        }
+        .play-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .play-btn:hover {
+            background-color: #0056b3;
+        }
+        footer {
+            margin-top: 20px;
+        }
+        .bt {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .bt.remove {
+            background-color: #dc3545;
+        }
+        .bt.pause {
+            background-color: #ffc107;
+        }
+        .bt.sync {
+            background-color: #17a2b8;
+        }
+        .bt:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <input type="text" id="mediaLink" placeholder="Enter audio/video link or search YouTube">
+    <button id="searchYouTube">Search YouTube</button>
+    <div id="controls">
+        <button id="playBtn" class="bt">▶︎ Play</button>
+        <button id="pauseBtn" class="bt pause">|| Pause</button>
+        <button id="removeBtn" class="bt remove">🗑️ Remove</button>
+        <button id="syncBtn" class="bt sync">Sync to 30s</button>
+    </div>
+</header>
+
+<div id="player"></div>
+
+<div id="searchResults"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBd1hHYd-GmINKv0l0qwi_10udbiLsTeX0",
+        authDomain: "quizzz-998c0.firebaseapp.com",
+        databaseURL: "https://quizzz-998c0-default-rtdb.firebaseio.com",
+        projectId: "quizzz-998c0",
+        storageBucket: "quizzz-998c0.appspot.com",
+        messagingSenderId: "320059830331",
+        appId: "1:320059830331:web:221f1eebb6e363cc78ac1e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth();
+
+    let currentMediaLink = '';
+    let currentUserId = null;
+    let player;
+    let playerDiv;
+
+    // Authenticate the user (Anonymous for now)
+    signInAnonymously(auth)
+        .then(() => {
+            console.log("Signed in anonymously.");
+        })
+        .catch((error) => {
+            console.error("Error signing in anonymously:", error);
+        });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUserId = user.uid;
+            console.log("User signed in:", currentUserId);
+        }
+    });
+
+    const currentMediaRef = ref(database, 'currentMedia');
+
+    // Function to play the video and update Firebase with the video link
+    function playYouTubeVideo(link) {
+        currentMediaLink = link;
+        
+        // Setup media player for the selected YouTube video
+        setupMediaPlayer(currentMediaLink);
+
+        // Store the video link in Firebase under the 'currentMedia' node
+        update(ref(database, 'currentMedia'), {
+            link: currentMediaLink,
+            state: 'playing'
+        })
+        .then(() => {
+            console.log("Video link and state successfully stored in Firebase.");
+        })
+        .catch((error) => {
+            console.error("Error storing video link in Firebase:", error);
+        });
+    }
+
+    // YouTube Search functionality
+    document.getElementById('searchYouTube').addEventListener('click', () => {
+        const query = document.getElementById('mediaLink').value;
+        searchYouTube(query);
+    });
+
+    function searchYouTube(query) {
+        const apiKey = 'AIzaSyDOaiGm4sJQu6VO18xAZRB9wBgwSgOJ3hk'; // Replace with your actual YouTube API key
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
+
+        fetch(searchUrl)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data.items);
+            })
+            .catch(error => console.error('Error fetching YouTube search results:', error));
+    }
+
+    function displaySearchResults(videos) {
+        const searchResultsDiv = document.getElementById('searchResults');
+        searchResultsDiv.innerHTML = ''; // Clear previous results
+
+        videos.forEach(video => {
+            const videoId = video.id.videoId;
+            const videoTitle = video.snippet.title;
+            const videoThumbnail = video.snippet.thumbnails.default.url;
+
+            const searchItemDiv = document.createElement('div');
+            searchItemDiv.classList.add('search-item');
+
+            searchItemDiv.innerHTML = `
+                <div>
+                    <img src="${videoThumbnail}" alt="${videoTitle}">
+                </div>
+                <div>${videoTitle}</div>
+                <button class="play-btn" data-video-id="${videoId}">Play</button>
+            `;
+
+            searchResultsDiv.appendChild(searchItemDiv);
+
+            // Play button functionality
+            searchItemDiv.querySelector('.play-btn').addEventListener('click', (e) => {
+                const selectedVideoId = e.target.getAttribute('data-video-id');
+                const youtubeLink = `https://www.youtube.com/watch?v=${selectedVideoId}`;
+
+                playYouTubeVideo(youtubeLink);
+            });
+        });
+    }
+
+    // Function to set up the media player
+    function setupMediaPlayer(link) {
+        playerDiv = document.getElementById('player');
+        playerDiv.innerHTML = ''; // Clear previous player
+        if (isYouTubeLink(link)) {
+            const videoId = getYouTubeId(link);
+            player = document.createElement('iframe');
+            player.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1`;
+            player.width = 1000;
+            player.height = 500;
+            player.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            player.allowFullscreen = true;
+            playerDiv.appendChild(player);
+
+            // Ensure playback starts from the specified time, if provided
+            onYouTubeIframeAPIReady(videoId);
+        }
+    }
+
+    // Function to initialize the YouTube player API
+    function onYouTubeIframeAPIReady(videoId) {
+        const playerInstance = new YT.Player(player, {
+            height: '500',
+            width: '1000',
+            videoId: videoId,
+            playerVars: { 'autoplay': 1, 'start': getStartTime(currentMediaLink) },
+            events: {
+                'onReady': (event) => {
+                    event.target.playVideo();
+                },
+                'onStateChange': (event) => {
+                    if (event.data === YT.PlayerState.PAUSED) {
+                        update(currentMediaRef, { state: 'paused' });
+                    }
+                }
+            }
+        });
+    }
+
+    function getStartTime(link) {
+        const match = link.match(/t=(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+    }
+
+    function isYouTubeLink(link) {
+        return /(?:youtube\.com|youtu\.be)/.test(link);
+    }
+
+    function getYouTubeId(link) {
+        const url = new URL(link);
+        return url.searchParams.get("v");
+    }
+
+    // Pause the current video and update Firebase
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+        update(currentMediaRef, { state: 'paused' })
+            .then(() => {
+                if (player) {
+                    player.pauseVideo();
+                    console.log("Video paused and state updated in Firebase.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error updating video state to paused in Firebase:", error);
+            });
+    });
+
+    // Remove the current video from Firebase
+    document.getElementById('removeBtn').addEventListener('click', () => {
+        remove(currentMediaRef)
+            .then(() => {
+                console.log("Media removed from Firebase.");
+                playerDiv.innerHTML = ''; // Clear player
+            })
+            .catch((error) => {
+                console.error("Error removing media from Firebase:", error);
+            });
+    });
+
+    // Sync to time
+    document.getElementById('syncBtn').addEventListener('click', () => {
+        if (currentMediaLink) {
+            // Replace the current link with a new link with t=30 seconds
+            const newLink = currentMediaLink.split('?')[0] + '?t=30';
+            currentMediaLink = newLink;
+            console.log("Synchronized to 30 seconds:", currentMediaLink);
+            // Update Firebase with the new link
+            update(currentMediaRef, { link: currentMediaLink });
+            if (player) {
+                // Pause the video and reload with new link
+                player.pauseVideo();
+                setupMediaPlayer(currentMediaLink); // Reload with updated link
+            }
+        } else {
+            console.error("No media link to sync.");
+        }
+    });
+
+    // Firebase listener for currentMedia state
+    onValue(currentMediaRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            currentMediaLink = data.link;
+            if (data.state === 'paused') {
+                console.log("Video is paused in Firebase");
+                if (player) {
+                    player.pauseVideo(); // Pause the player
+                }
+            } else if (data.state === 'playing') {
+                console.log("Video is playing in Firebase");
+                setupMediaPlayer(currentMediaLink); // Setup and play video
+            }
+        }
+    });
+</script>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

@@ -291,7 +291,6 @@
         addControlListeners();
     }
     
-
     function addControlListeners() {
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
@@ -315,16 +314,27 @@
             removeBtn.addEventListener('click', () => {
                 console.log("Remove button clicked");
                 if (currentMediaLink) {
-                    set(ref(database, 'mediaLink'), null);
-                    player.pause();
-                    player.src = ''; // Clear the player
-                    playerDiv.innerHTML = '';
-                    document.getElementById('controls').style.display = 'none'; // Hide controls
-                    currentMediaLink = ''; // Reset current link
+                    set(ref(database, 'mediaLink'), null)
+                        .then(() => {
+                            // Clear the player and UI after successful removal
+                            player.pause(); // Pause the current player
+                            player.src = ''; // Clear the player source
+                            playerDiv.innerHTML = ''; // Clear the player div
+                            document.getElementById('controls').style.display = 'none'; // Hide controls
+                            currentMediaLink = ''; // Reset current link
+        
+                            // Show confirmation message
+                            alert('Media link has been removed successfully.');
+                        })
+                        .catch((error) => {
+                            console.error('Error removing media link:', error);
+                        });
                 }
             });
         }
+            
     }
+    
     
 
     function isYouTubeLink(link) {
